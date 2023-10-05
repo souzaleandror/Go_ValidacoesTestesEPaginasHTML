@@ -14,6 +14,7 @@ lsof -i:8080
 Kill -9
 
 react-scripts --openssl-legacy-provider start
+go get github.com/stretchr/testify
 ```
 
 @01-Instalando e criando a primeira rota com Gin
@@ -242,3 +243,210 @@ Criamos nossas validações na struct de Aluno, garantindo que um campo não fiq
 Aplicamos essa validação no controller no momento que criamos ou editamos um aluno.
 Na próxima aula:
 Vamos mergulhar no mundo de testes com Go!
+
+#### 05/10/2023
+
+@02-Testes
+
+@@01
+Projeto da aula anterior
+
+Aqui você pode baixar o zip da aula 01 ou acessar os arquivos no Github!
+
+https://github.com/alura-cursos/api_rest_gin_go_2-validacoes-e-testes/archive/refs/heads/aula_1.zip
+
+https://github.com/alura-cursos/api_rest_gin_go_2-validacoes-e-testes
+
+@@02
+Teste no Postman
+
+[00:00] Agora vamos iniciar uma nova fase nos nossos treinamentos de Gin, que são os testes. O que acontece? Todo sistema de software, todos, sem exceção, ele está destinado a crescer e evoluir, seja em funcionalidade ou alterando funcionalidades que já existem.
+[00:15] Pensando nisso, em um time em que trabalham várias pessoas no mesmo projeto, uma das formas que temos de garantir que a alteração em uma parte do código não vai interferir em outras partes do código é através de testes. Eu quero mostrar para vocês testes, inicialmente um teste muito simples, utilizando o Postman.
+
+[00:32] Olha que interessante: na nossa aplicação, quando eu faço uma requisição "Get" para http://localhost:8080/gui e dou um "Send", a API retorna uma mensagem - ela já está configurada e retorna uma mensagem que diz: "API diz: E aí, gui, tudo beleza?"
+
+[00:49] Temos várias informações que acontecem aqui. Nós verificamos o status code, podemos verificar o corpo do conteúdo, vários tipos de teste que podemos realizar. Eu quero mostrar para vocês alguns testes que realizamos utilizando o próprio Postman também. Se viermos no Postman, aqui embaixo do comando, "Params", "Authorization", "Headers", "Body", nós temos aqui uma aba de "Tests", antes de "Settings".
+
+[01:11] Podemos verificar, por exemplo, se o status code da resposta é 200. Ele começa aqui, do lado direito, vou scrollar um pouco para baixo, "Status code: Code is 200".
+
+[01:22] Quando eu dou um "Send", olha que interessante, ele me mostrou a mesma resposta, só que aqui, no "Test Results", na parte de baixo, ele passou 1/1, é 200. Porém, se eu faço assim, vou passar nada, http://localhost:8080 e dou um "Send", ele deu uma mensagem de erro. No corpo da requisição ele devolveu um 404. Mas, na mensagem de erro, ele falou: status code devia ser 200 e tem um erro de assertação.
+
+[01:49] Para deixar esse código do erro no Postman, esse teste, ainda melhor, podemos falar Status code da requisição deve ser 200. Quando eu dou um "Send", ele fala exatamente dessa mesma forma.
+
+[02:03] Esse teste, no Postman, é feito utilizando JavaScript, então pm.test, que é a instância do Postman, e ele faz aqui, cria uma função assíncrona e tal, e faz toda essa chamada. Nós podemos criar outros tipos de testes aqui também. Vou colocar o meu nome, http://localhost:8080/gui, só para recebermos um 200 e ficar verde, mostrando que o teste passou.
+
+[02:24] Eu quero verificar, por exemplo, se o conteúdo, se esse conteúdo que aparece aqui - vou colocar aqui embaixo no "Body", que a API fala: "A API diz: E ai, gui, tudo beleza?" - é exatamente igual a esse valor.
+
+[02:37] Então fiz a requisição, ele falou: olha, o que eu espero de body desta requisição é exatamente esse conteúdo. Tem aqui do lado direito, "Response body is equal to a string". Vou clicar nessa opção "Response body is equal to a string", vou tirar essa mensagem, vou colocar aspas simples e vou dar um "Ctrl + V" da mensagem que temos ali embaixo.
+
+[03:01] Mas repare que essa mensagem aparece em um formato JSON, então vou cancelar, vou colocar abrindo e fechando chaves: aspas simples, abre e fecha chaves, aspas duplas e começa a nossa string.
+
+[03:13] Vou dar um "Send" e vamos receber uma mensagem de erro, porque ele fala: olha, o que eu esperava era: "A API diz: E aí, gui, tudo beleza?", mas olhe o que eu recebi. Olhando, visualmente, parece que está tudo igual, a única diferença é esse espaço que temos entre as frases.
+
+[03:29] Vou tirar esse espaço. Quando eu dou o "Send" mais uma vez, ele dá que ambos os testes passaram. Eu posso falar aqui, por exemplo, "Verificando o conteúdo da resposta". Vou dar um "Send" aqui e está tudo certo, esse teste passou.
+
+[03:50] Podemos realizar alguns testes no Postman também, mas, se pararmos para pensar, esses testes que eu estou realizando no Postman, eles estão funcionando no meu Postman. Seria legal se pudéssemos criar, de fato, testes para serem realizados dentro do Go. É isso o que vamos fazer na sequência. Esses dois testes que eu fiz, eu quero realizá-los utilizando o Go.
+
+@@03
+Meu primeiro teste
+
+[00:00] Criamos dois testes no Postman, que verificam o status code e o corpo da resposta de uma requisição. O que queremos fazer agora é criar esses mesmos testes no Go. Para isso o Go já tem uma forma de executarmos os nossos testes. Se eu escrevo, no terminal, go test sem o servidor estar rodando, olha só que interessante.
+[00:19] Ele fala que não tem nenhum arquivo de teste para você testar, para o Go, para testarmos. Então vamos criar um arquivo de teste, que eu vou chamar de "main_test.go". Repare que esse nome é bem interessante, "main_test.go". O que eu vou fazer? Vou falar que esse pacote de teste, ele faz parte do pacote package main - vou minimizar o menu lateral só para vermos melhor.
+
+[00:42] Ele faz parte do pacote main. Vamos entender que tipo de teste vamos realizar e em qual momento nós estamos aqui, dentro dessa aplicação. Essa aplicação, ela está funcionando em ambiente de desenvolvimento. “Puxa, Gui, então quer dizer que o nosso banco de dados do Postgres não é o banco de dados de produção?” Não, é o banco de dados de desenvolvimento.
+
+[01:02] Algumas aplicações e alguns frameworks utilizam outros tipos de bancos de dados para conseguir realizar os seus testes. Vou dar um exemplo: no Django, o banco de dados inicial, que vem na aplicação, é o SQLite. Quando colocamos um projeto Django em produção, geralmente, na maioria esmagadora dos casos, colocamos esse projeto em um Postgres, em um MySQL ou em um outro banco de dados.
+
+[01:25] Então teríamos um outro banco de dados de produção e um banco de dados de desenvolvimento. No nosso caso, nós só temos o ambiente de desenvolvimento, então não estamos trabalhando com o banco de dados em produção. Todos os testes que eu fizer eu vou vincular esse banco de dados de desenvolvimento, que nós temos aqui.
+
+[01:40] O que eu quero fazer? Eu quero testar o nosso arquivo main. Nós nos conectamos com o banco de dados e subimos as nossas rotas da aplicação. Eu quero testar essas rotas, esses endpoints, quero verificar se o status code que eu estou recebendo é o correto, se o comportamento que estamos tendo é o correto também.
+
+[01:57] O que eu vou fazer? Primeira coisa, vamos testar esse nosso primeiro endpoint, que faz o controle da saudação. Só que eu não vou pegar esse meu arquivo de rotas do HandleRequest e executar ele aqui. Eu vou criar um registro de rota com a ação que teremos, com o get, para cada um desses, chamando o nosso controller.
+
+[02:17] Então eu vou criar, no "main_test.go", uma função que eu vou chamar de func SetupDasRotasDeTeste(). O que eu quero fazer? Essa minha função, ela vai retornar uma instância do Gin, vai retornar uma instância () *gin.Engine{}. Aqui, dentro das chaves, eu vou criar rotas := gin.Default(), que é o que estamos utilizando na nossa aplicação de rotas mesmo, gin.Default.
+
+[02:55] Não vou registrar nenhuma rota, vou dar um return dessas rotas, return rotas. Agora sim. Já temos aqui o nosso setup das rotas. A primeira rota que eu quero testar é a seguinte - antes de testar a rota de fato, vamos entender como funciona uma função de teste no Go, que isso é muito importante.
+
+[03:12] A função de teste é uma função normal, que já temos como parâmetro, só que ela possui uma assinatura específica. Ou seja, a primeira palavra da minha função de teste precisa ser Teste com "T" maiúsculo. Isso significa que todas as funções de teste devem começar com essa palavra teste com "T" maiúsculo, seguido do teste que vamos realizar.
+
+[03:34] Então o primeiro teste que eu quero realizar aqui é um teste que eu sei que vai falhar. Será o func TestFalhador(), só para visualizarmos como é que funciona. Só isso é suficiente? Não, toda função de teste, ela precisará receber um parâmetro, que é o ponteiro apontando para o teste que vamos utilizar.
+
+[03:52] Então (t, por convenção usamos o "T", apontando para "testing.T": (t *testing.T), que é o teste que vamos utilizar. Dentro desse "T", quando eu coloco um ponto, tem vários métodos que eu posso utilizar, várias funções que eu posso utilizar para realizar os meus testes e deixar os meus testes ainda melhores.
+
+[04:12] Então o primeiro teste que eu quero realizar é um teste que vai falhar. Eu vou colocar esse t.Fatalf(), porque eu quero colocar uma mensagem, uma string, e esse teste eu vou chamar ("Teste falhou de propósito, não se preocupe"). Esse é o meu primeiro teste.
+
+[04:34] Teste falhou de propósito, o que eu vou fazer agora? Vou realizar o mesmo código no terminal, go test - Go, realize os testes e veja o que acontece. Só para vermos a cara de um teste que falha. Sempre no Go, a cara de um teste que vai falhar é assim - vou minimizar para podermos visualizar melhor. Está a mesma coisa, vou deixar grande mesmo.
+
+[04:52] Então aqui, o "TestFalhador", ele dá o tempo que demorou para esse teste falhar e dá a mensagem: “Teste falhou de propósito, não se preocupe”. O que eu quero fazer na sequência? Toda função de teste vai ter a palavra Test, com "T" maiúsculo, seguido do nome do teste que vamos realizar, e vai receber como parâmetro o "T" apontando para o testing.T.
+
+[05:13] E temos, dentro de "T", várias funções que podemos utilizar para realizar os nossos testes, mandar as mensagens de uma forma melhor. O que eu quero fazer, na sequência, é de fato criar um teste que verifique o status code e que verifique o corpo da requisição. Isso nós vamos fazer na sequência.
+
+@@04
+StatusCode
+
+[00:00] Nesse vídeo vamos verificar o status code da nossa requisição de saudação. Para começar, eu quero verificar esse endpoint aqui.
+[00:08] Quero verificar se uma requisição Get passando o nome, passando o parâmetro, que chama esse controller, nós temos o status code esperado, que é o 200, que é o de sucesso. Esse TestFalhador não serve para nada, a não ser falhar, então vamos tirar ele e vou dar um nome para esse nosso teste.
+
+[00:25] Será o TestVerificaStatusCodeDaSaudacaoComParametro(t *testing.T). Fica bem bonito. Vou apagar esse t.Fatalf, que não vamos utilizar agora. Vamos começar. Eu tenho aqui em cima um setup de rotas que vamos registrar novas rotas para realizar os nossos testes.
+
+[00:59] A primeira coisa que eu vou fazer será criar, pegar uma instância do Gin, com esse setup de rotas, r := SetupDeRotasDeTeste(). O que acontece? Essa linha significa que eu estou criando uma nova instância do Gin que não tem nenhuma rota cadastrada. Eu preciso cadastrar uma rota. Eu vou copiar essa linha 10 do meu HandleRequest.
+
+[01:24] Eu vou copiar ela toda: r.GET("/:nome", controllers.Saudacoes), e vou fazer tudo isso. Repare que o controller está dando uma mensagem de erro, que ele não está aqui. Quando eu salvar ele vai trazer o controller no import para mim. Até agora eu tenho, dentro dessa rota de teste, o Gin com apenas um endpoint registrado.
+
+[01:44] O que eu preciso fazer agora é realizar, de fato, uma requisição. Para isso, eu vou colocar aqui req, e essa função que realiza a requisição devolve mais uma mensagem de erro, que não vamos fazer a verificação agora, então eu vou ocultar. Fica req, _:= http.NewRequest().
+
+[02:07] Eu vou falar que essa requisição que eu quero realizar, ela vai ser uma requisição get e eu preciso passar qual é a URL, o string na URL. A minha string será por barra localhost e vou passar a mensagem gui. Vou dar uma vírgula e qual é o corpo dessa requisição? Tem algum JSON, algum dado que eu quero passar para essa requisição? Não, não tem nada. Então eu passo ele com nil, req, _:= http.NewRequest ("GET", "/gui", nil).
+
+[02:33] Um outro ponto muito importante, além dessa requisição, eu preciso armazenar essa minha resposta. Então eu vou criar uma variável chamada resposta := http e aqui é algo muito interessante, httptest.NewRecoder(). Vamos entender o que é esse NewRecorder. NewRecorder é uma função muito interessante.
+
+[02:59] O que ela faz? Ela vai implementar a interface de quem vai realizar, de quem vai armazenar essa resposta. Ela nos fornece essa funcionalidade de que temos uma requisição, temos a resposta e precisamos armazenar todos os dados dessa resposta, o corpo, o status code, várias informações, e essa função implementa uma interface de response writer que faz essa funcionalidade para nós.
+
+[03:23] Então temos um cenário bem legal para conseguirmos testar. “Gui, eu tenho uma pergunta: a requisição já foi realizada?” Não, a requisição ainda não foi realizada. Nós temos uma variável que já fala: “a requisição vai ser assim”. E temos uma variável de resposta que fala: “guarde essa resposta da requisição”. Mas, de fato, ela não foi realizada. Como fazemos para realizar essa requisição?
+
+[03:45] Nós fazemos através desse código r.ServeHTTP(). É esse cara que vai, de fato, realizar a requisição. Ele vai precisar de dois argumentos, o primeiro é: onde eu guardo a resposta dessa requisição? Guarde dentro de (resposta, ). E qual é o tipo de requisição que eu vou fazer? Eu vou mandar a requisição, a requisição é essa aqui (resposta, req).
+
+[04:06] Nesse momento, se realizarmos o teste, ele vai realizar a requisição e vai guardar a resposta. O que falta verificarmos? Apenas se o status code é igual ao da resposta. Eu vou colocar aqui if resposta.Code. Se a resposta.Code != http.StatusOK {} - se ela não for igual. Qual é o StatusOK?
+
+[04:36] O StatusOK é o 200. Se ela não for igual, vamos exibir uma mensagem de erro que nós já aprendemos, que é o t.Failf(), porque vamos criar uma string para informar essa mensagem. Vamos informar aqui ("Status error: "), e aqui eu posso juntar, por exemplo, ("Status error: valor recebido foi ").
+
+[05:00] Vou concatenar a nossa mensagem com o %d, ("Status error: valor recebido foi %d, e o esperado era %d"). Coloquei os dois ali, o que eu vou fazer agora será juntar esses dois valores. O primeiro valor que queremos, o valor recebido foi a , resposta.Code,. O valor esperado era o , http.StatusOK, esse era o valor esperado.
+
+[05:33] Aqui eu estou em uma linha só, deixa eu tirar só para conseguirmos visualizar. Todo o meu código está feito assim, porque eu cortei para conseguirmos visualizar melhor, mas tudo isso está em uma linha. Então vamos só relembrar o que fizemos. Pegamos uma instância do Gin, registramos uma nova rota, falamos que a requisição será get com esse parâmetro gui e não temos nenhum corpo da requisição.
+
+[05:54] A resposta nós vamos armazenar, queremos salvar todo o conteúdo da resposta, status code, body, a resposta ele vai criar aqui para nós. E o r.ServeHTTP, ele vai de fato realizar essa requisição. Depois nós verificamos: o status code da resposta, que vai vir, é igual ao 200, que é o sucesso?
+
+[06:14] Se for igual, maravilha, o nosso teste vai passar. Se não for, o nosso teste falhou e será muito triste. Então go test, quando damos um "Enter" aqui, olha que interessante, ele vai falar que passou. "Pass", tem um ok e o nosso teste passou.
+
+[06:28] Então quando passamos um parâmetro para essa requisição, ela devolve um status code ok. E se eu não passar? Tirei o gui. Vamos realizar mais uma vez esse teste, só para visualizarmos? Quando eu tiro, nós temos uma mensagem de erro muito importante, bem legal. Olha só: "Status error: o valor recebido foi 404 e o esperado era 200".
+
+[06:51] Eu vou voltar o teste com o gui, que é o que queremos fazer, o teste para passar. Ou você pode colocar o seu nome também, não tem problema. E realizamos aqui o nosso primeiro teste. O nosso primeiro não, o primeiro foi o falhador, esse é o nosso segundo teste. O que eu quero fazer, na sequência, é verificar, de fato, o conteúdo. Será que o corpo dessa requisição tem o valor esperado? Isso vamos fazer na sequência.
+
+@@05
+Assert
+
+[00:00] Existe um pacote no Go que fornece muitas ferramentas para conseguirmos testar o nosso código e garantir o comportamento esperado. Se observarmos a nossa aplicação, nós colocamos um if que verifica a resposta que nós recebemos com o Http.StatusOK, com o status 200.
+[00:17] Só que existe uma forma de não precisarmos escrever esse if na mão. Eu vou pesquisar no Google por "golang testify". Nesse primeiro link, repare que ele vai dar uma explicação, a documentação do testify. Eu quero saber se uma coisa é igual, eu passo o meu teste, o "T", como primeiro parâmetro, verifico os dois valores e posso passar também uma mensagem.
+
+[00:46] Vamos instalar então esse pacote na nossa aplicação, para conseguirmos utilizar? Vou procurar a seção sobre instalação.
+
+[00:55] Tem aqui, embaixo, go get github.com/stretchr/testify. Vou copiar essa linha. No nosso código, no nosso terminal, vou dar o go get github.com/stretchr/testify, já temos aqui o go get para instalar toda essa dependência. Está instalado, agora, o que precisamos fazer? Lembra que no nosso código nós temos todas essas três linhas aqui do if?
+
+[01:19] Eu vou tirar essas linhas e vou colocar o assert. Repare que aqui tem algo muito importante: nós temos o assert do "go-playground" e o assert do "stretchr/testify".
+
+[01:34] É o segundo, é esse do "stretchr/testify", não é o assert do "go-playground", é o segundo. Assim que eu coloco o segundo ele já faz um import para mim do testify. Então eu quero saber se uma coisa é igual? assert.Equal(). Aqui eu vou passar, em primeiro lugar, vamos passar a nossa instância de teste, o nosso valor de teste, o nosso "T". Eu vou falar: meu teste é esse aí.
+
+[02:00] Segundo: qual é o valor esperado. O valor esperado é o (t, http.StatusOK, ). E qual é o valor que eu quero testar, o valor atual, (t, http.StatusOK, resposta.Code). Ficou muito mais bonito de ler o nosso teste.
+
+[02:21] Limpando o meu terminal, se eu rodar o go test, olha que interessante, teremos o mesmo resultado: Ok e passou. Se eu tirar o gui, para recebermos uma notícia aqui, vamos ver? go test, temos aqui o nosso erro.
+
+[02:37] Podemos até fazer a mensagem de erro padronizada, igual estávamos fazendo anteriormente, eu deixo de desafio para você colocar essas mensagens de erro. Eu vou colocar só no primeiro, só para visualizarmos como vai ficar no nosso código.
+
+[03:01] Aqui embaixo, na resposta, o terceiro parâmetro eu posso colocar (t, http.StatusOK, resposta.Code, "Deveriam ser iguais"). Abrindo o meu terminal - deixa eu só abaixar o terminal para conseguirmos ver todo o código ali em cima.
+
+[03:16] go test mais uma vez e "Deveriam ser iguais" na mensagem de erro que aparece aqui. Muito legal. “Poxa, Gui, mas o que eu quero ver é a resposta da requisição, o corpo da requisição”. Para isso existe um pacote Go que já vem instalado, build-in, que ele conseguirá ler todo o corpo da requisição e pegar o JSON que nós precisamos. Então vamos lá, primeira coisa, para eu verificar o corpo da requisição, eu preciso fazer um mock da minha resposta. O que é um mock?
+
+[03:50] O que eu espero. Eu vou chamar aqui mockDaResposta := será o quê? Será aquele meu código que aparece na minha API: "API diz", esse código aqui. Eu vou copiar todo ele, só que a partir das chaves. Deixa eu colocar aqui na resposta, no corpo, vou pegar todo esse conteúdo aqui debaixo.
+
+[04:20] Só que eu vou pegar das chaves, eu vou pegar o mesmo do teste, esse aqui todo, a partir das chaves, eu não vou copiar as aspas simples.
+
+[04:28] Como eu faço? Se eu colocar no código, vai ter um erro. Ele vai falar: “olha, estou esperando um operador, não é isso o que eu quero, eu quero que seja todo esse conteúdo”. Para isso eu vou encapsular esse conteúdo através de uma crase invertida. Tenho aqui o mock da resposta, ele vai falar que você tem o mock da resposta, mas você não está usando, você declarou, mas não está usando.
+
+[04:51] Então vamos usar. Só que antes de usarmos, vamos pegar só o corpo da requisição. Eu vou chamar aqui de respostaBody :=, que é o corpo da requisição. Essa respostaBory :=, uma forma que temos para utilizar é utilizando o pacote := ioutil.ReadAll(). Ou seja, para ele ler todo. Ler todo o quê?
+
+[05:19] A resposta, o nosso resposta ali em cima, (resposta.Body), ler todo o corpo da requisição. Assim que eu salvo, repare que temos essas duas variáveis, elas estão aqui, mas ainda não estamos utilizando. Vamos utilizar elas onde? No assert. Eu vou falar assert.Equal(). Eu quero, passando o nosso teste T, eu quero o valor esperado. É o (t, mockDaResposta,.
+
+[05:47] E o valor que eu vou receber é a nossa (t, mockDaResposta, respostaBody). Salvando esse cara. Repare que esse ioutil.ReadAll, ele está dando uma mensagem de erro, porque ele retorna mais de um parâmetro. Eu vou deixar os dois aqui.
+
+[06:03] Nós vamos rodar esse nosso teste para ver o que vai acontecer. Vou jogar o terminal para cima - dê um pause se você quiser ler. Vou jogar para cima, go test para ver o que acontece. Nós temos uma mensagem de erro muito doida.
+
+[06:17] Repare que ele falou que o valor esperado era uma string "API diz", e o valor que ele recebeu é um monte de número, um monte de caractere muito louco. Por quê? Porque essa nossa função do ioutil, ela oferece uma abstração de super alto nível, que lê os dados e retorna em um conjunto de bytes, em vários bytes.
+
+[06:40] E não são os bytes que nós queremos, nós queremos que essa respostaBody seja do tipo string. Então eu posso colocar aqui assert.Equal(t, mockDaResposta, string(respostaBody)) para ela. Vamos fazer o teste mais uma vez, go test. Olha que interessante: agora sim, temos uma mensagem.
+
+[06:54] O nosso teste não passou, vamos verificar o que aconteceu. Ele falou que recebemos uma diferença do que nós precisamos.
+
+[07:03] Nós recebemos um 404 na página que estávamos esperando. Por quê? Porque eu tirei o gui ali de cima. Eu vou colocar o gui, agora sim. Subindo o terminal um pouco, limpando, go test. Maravilha.
+
+[07:21] Passamos neste primeiro teste e passamos nos dois testes da nossa API. Então ele deu certo. “Gui, mas está exibindo mesmo esses valores?” Vamos colocar aqui para imprimirmos? fmt.println(), vou colocar (string(respostaBopdy)), do tipo string, só para vermos o que está vindo. Vou colocar também o nosso mock, fmt.Println(mockDaResposta). Não precisa ser do tipo string, porque ele já é do tipo string.
+
+[07:57] Limpando esses dois testes, rodando mais uma vez. Olha só, teremos os dois, a mesma coisa, "API diz":"E aí, gui, tudo beleza?". O primeiro é o da respostaBody e o segundo o meu mock, o que eu esperava.
+
+[08:08] Realmente temos o resultado que esperamos. Nós pegamos o corpo da requisição, com o ioutil.ReadAll() e depois, para conseguir fazer essa comparação, só convertemos ele, só mudamos aquele conjunto de bytes para string. E nós fizemos o mesmo teste que realizávamos no Postman, nós fizemos no VS Code também.
+
+https://github.com/stretchr/testify
+
+@@06
+Escrevendo um bom teste
+
+Nesta aula, vimos que existe um comando específico do Go para testar nossa aplicação, como a convenção da escrita dos testes e isso foi incrível.
+Sabendo disso, analise as afirmações abaixo e marque as verdadeiras:
+
+Alternativa correta
+É possível realizar vários tipos de testes em uma aplicação.
+ 
+Alternativa correta! Existem outros tipos de testes, cada um com um objetivo diferente.
+Alternativa correta
+Conhecer o sistema que será desenvolvido e aplicar diferentes testes, entendendo os fluxos e regras, fará grande diferença na criação dos testes.
+ 
+Alternativa correta! Entender o objetivo do sistema é essencial para o sucesso dos testes.
+Alternativa correta
+Devemos apenas saber como escrever testes no Go.
+
+https://pt.wikipedia.org/wiki/Teste_de_software
+
+@@07
+Faça como eu fiz
+
+Chegou a hora de você seguir todos os passos realizados por mim durante esta aula. Caso já tenha feito isso, excelente. Se ainda não fez, é importante que você implemente o que foi visto no vídeo para poder continuar com a próxima aula, que tem como pré-requisito todo o código escrito até o momento.
+Caso não encontre uma solução nas perguntas feitas por alunos e alunas deste curso, para comunicar erros e tirar dúvidas de forma eficaz, clique neste link e saiba como utilizar o fórum da Alura.
+
+@@08
+O que aprendemos?
+
+Nesta aula:
+Realizamos um teste no Postman que verifica o statusCode de uma resposta;
+Criamos nosso primeiro teste em Go, o TestFalhador;
+Escrevemos um teste que verifica o endpoint de Saudação da API;
+Instalando o assert e alteramos o código verificando o corpo da resposta.
+Na próxima aula:
+Vamos testar a busca por ID, e os métodos DELETE e PATCH da nossa API!
