@@ -450,3 +450,192 @@ Escrevemos um teste que verifica o endpoint de Saudação da API;
 Instalando o assert e alteramos o código verificando o corpo da resposta.
 Na próxima aula:
 Vamos testar a busca por ID, e os métodos DELETE e PATCH da nossa API!
+
+#### 06/10/2023
+
+@03-Testando os endpoints
+
+@@01
+Projeto da aula anterior
+
+Aqui você pode baixar o zip da aula 02 ou acessar os arquivos no Github!
+
+https://github.com/alura-cursos/api_rest_gin_go_2-validacoes-e-testes/archive/refs/heads/aula_2.zip
+
+https://github.com/alura-cursos/api_rest_gin_go_2-validacoes-e-testes/tree/aula_2
+
+@@02
+Testando a listagem de um recurso
+
+[00:00] Agora que já realizamos o nosso primeiro teste de um endpoint, vamos testar os nossos outros endpoints? Olha só, temos aqui no HandleRequest um recurso, um endpoint que lista todos os alunos.
+[00:10] Eu quero testar isso, para ver se, de fato, chega uma requisição, se conseguimos exibir esses alunos e mostrar a resposta certa. Então vamos lá, para começar, vou criar uma nova função de teste. Eu vou escrever aqui func Test(), com a assinatura que nós já temos,(t *testing.T) e vou dar um nome para esse teste.
+
+[00:34] Esse teste será o "TestListandoTodosOsAlunosHandler", por exemplo, de lidar com a requisição. func TestListandoTodosOsAlunosHandler(t *testing.T). O que eu preciso fazer para esse teste? Em primeiro lugar, se eu quero listar todos os alunos que eu tenho registrados, eu preciso acessar o banco de dados.
+
+[00:58] Lembrando que o banco de dados que estamos utilizando é o banco de dados de desenvolvimento. Então o que eu vou fazer? Vou chamar do database, database.ConectaComBancoDeDados(), a nossa função. Assim que eu salvo, repare que ele já trouxe nos imports o database para conseguirmos conectar.
+
+[01:15] A nossa função de teste já está conectada com o banco de dados de desenvolvimento. O que eu preciso agora é de uma rota do Gin, r := SetupDasRotasDeTeste() e vou registar a nossa primeira rota de teste, será exatamente essa linha r.GET("/alunos", controller.TodosAlunos), e vai chamar o controller que exibe todos os alunos.
+
+[01:41] Já temos a conexão com o banco de dados, já temos o setup das rotas de teste, uma instância do Gin, e já registramos uma rota para esse recurso. Vamos ter aqui o req, _ :=, não vamos lidar com as validações desse método ainda. Vamos realizar aqui a nossa requisição com :=http- vamos registrar a nossa requisição, melhor - req, _:= http.NewRequest().
+
+[02:08] Vamos falar: qual será o método que vamos utilizar? Será o método get. Qual será o path que vamos usar? Será o ("GET", "/alunos", nil). E vamos passar algum conteúdo no corpo dessa requisição? Não. Então vou colocar aqui como nil. Temos a nossa requisição, eu preciso de uma variável para a resposta.
+
+[02:27] resposta := httptest.NewRecorder(), para ele armazenar todas as informações que temos do corpo desta resposta específica, dentro dessa nossa variável. Vamos realizar, de fato aqui, essa requisição, r.ServeHTTP(), eu vou passar aqui a resposta e vou passar aqui a nossa requisição, (resposta, req).
+
+[02:55] A requisição está acontecendo. O que eu preciso verificar agora é o seguinte, vamos fazer a nossa assertação para vermos se, de fato, estamos recebendo o status code que esperamos. assert.Equal(t), devolvendo o nosso teste primeiro. Depois eu preciso fazer assim: o que eu espero, o valor esperado, é o (t, http.StatusOK,), isso é o que eu espero.
+
+[03:23] O que eu vou receber é o status code da resposta, (t, http.StatusOK, resposta.Code).
+
+[03:30] Vou limpar o meu terminal, vou rodar mais uma vez com o go test, vamos ver o que vai acontecer. Deu aqui que ele passou, ficou ok, ficou verde, ele passou nesse nosso teste. Então olha só, aqui em cima é o nosso primeiro teste. É o teste do controller Saudação, e aqui o segundo teste, que lista todos os alunos.
+
+[03:51] Aqui vai um ponto interessante: será mesmo que ele acessou o nosso banco de dados e listou todos os alunos? Nós podemos verificar isso. O que eu vou fazer? Depois que tudo aconteceu, o teste foi aprovado e estamos super felizes, comemorando, eu vou verificar se temos algum aluno aqui. fmt.Println(), vou colocar (resposta.Body), para vermos o corpo dessa requisição, para descobrirmos se tem algum aluno sendo exibido.
+
+[04:17] Vou limpar o meu terminal, go test mais uma vez. Ele listou aqui todos os nossos alunos. Olha que interessante, temos o ID 1, que é o Gui, tem a Ana - deixa eu ver se eu acho a Ana aqui nessa bagunça. Tem o ID 1 Guilherme, ID 2, nem lembro qual ID do Murilo. Achei a Ana. Listou todo mundo. Então, de fato, conseguimos conectar com o banco de dados e exibir essa resposta. Lembrando que o ambiente que nós estamos é um ambiente de desenvolvimento.
+
+[04:50] Agora que sabemos que, de fato, esses alunos estão aparecendo, eu posso tirar essa nossa mensagem, o fmt.Println(resposta.Body), porque conseguimos exibir, listar só os alunos que temos no banco de dados.
+
+@@03
+Aluno Mock
+
+[00:00] A nossa API tem alguns alunos já cadastrados. No meu caso eu quero mostrar isso para vocês, então eu vou rodar aqui a nossa aplicação, com go run main.go. Quando fazemos uma requisição para o https://localhost:8080/alunos, temos o ID 1 - deixa eu jogar aqui para cima para visualizarmos.
+[00:15] O aluno Gui, a aluna Ana e o aluno Murilo. Se eu deleto esses três alunos - vou deletar aqui, https://localhost:8080/alunos/1. Não lembro o ID da Ana, acho que é o ID 3. Deixa eu ver, só para ter certeza, qual é o ID do Murilo mesmo, que eu não lembro. O do Murilo, o ID 13. Vou deletar aqui, "Delete", https://localhost:8080/alunos/13. Deletei, dei um "Send". Deixa eu colocar no "Body", o alunos foi deletado.
+
+[00:45] Se eu dou um "Get" para https://localhost:8080/alunos, sem a barra, temos aqui que está vazio, não temos ninguém.
+
+[00:53] Mas, se observarmos, o status continua 200. O que isso significa? Significa que se eu rodo a minha aplicação agora, se eu rodo os meus teste, olha que interessante: rodei meu teste e ambos os meus testes vão passar, tanto o teste da saudação, que está certo, não tem relação com o banco de dados, como o teste que verifica os alunos também, ele passou.
+
+[01:14] Não importa se eu tenho alunos ou não. Isso é um pouco ruim. Por quê? Seria interessante se conseguíssemos criar um aluno de teste para esse nosso teste, para essa nossa verificação. Pensando nisso, vamos criar duas funções, uma que cria um aluno e insere no banco de dados essa função, eu posso chamar até de “cria aluno mock”, e uma outra que “deleta aluno mock”, que vai no banco de dados e deleta.
+
+[01:36] Nós falamos assim: sempre que for criar um aluno novo, será com essas características, depois que realizamos os testes, nós deletamos esse aluno. Então o que eu vou fazer? Embaixo da nossa função SetupRotasDeTeste, eu vou criar uma função que eu vou chamar de func CriaAlunoMock(). Essa função, ela não tem nada, não temos nenhum retorno, só inserimos esse aluno no banco de dados.
+
+[02:01] E terei uma outra função, que vou chamar de func DeletaAlunoMock(), para garantirmos que teremos pelo menos um aluno nesse banco de dados. Eu vou colocar aqui o nosso primeiro aluno, na nossa função que cria. Nós já sabemos que um aluno é aluno := models.Aluno{}, e vou criar aqui um aluno.
+
+[02:29] O aluno, nós sabemos que ele tem um nome, o nome desse aluno será {Nome: "Nome do Aluno Teste", }. Ele terá um CPF, , CPF: "", nós precisamos passar todos os dígitos, então , CPF: "12345678901",, que é um CPF. Também temos o RG, que são 9 dígitos, então , RG: "123456789"{.
+
+[03:01] O que eu vou fazer depois que eu tenho esse aluno, essa instância desse aluno? Vou gravar ele no banco de dados, database.DB.Create(&aluno), para ele criar de fato esse aluno, passando todo o endereço desse aluno, o endereço de memória do aluno. No final, o que precisamos? Precisamos armazenar o ID desse aluno. Por quê?
+
+[03:24] Como eu vou saber qual aluno que eu quero deletar? Então teremos aqui ID, que eu preciso passar, só que esse ID, ele precisa ser visto por outras classes também. Então aqui em cima, antes do SetupRotasDeTeste, eu vou criar uma variável, eu vou chamar de var ID int, vou chamar que o ID é um valor inteiro.
+
+[03:43] E na CriaAlunoMock eu vou armazenar esse valor do ID. Eu vou falar que o ID do aluno será esse: ID := int(), um valor inteiro do (aluno.ID). Eu tenho aqui esse valor agora. Salvei essas alterações, está tudo certo. O ID, como eu já declarei aqui em cima, eu não preciso dos dois pontos, ID = int(aluno.ID), só o igual.
+
+[04:07] E para eu deletar um aluno, o que eu vou fazer? Eu vou pegar um aluno, vou criar uma instância do aluno. Deixa eu criar aqui, var aluno, que é do tipo var alunos model.Aluno, e vou pedir agora para o meu banco de dados deletar esse aluno, database.DB.Delete(). Eu passo quem? O endereço de memória do aluno, vírgula e o ID que eu tenho de referência, (&aluno, ID).
+
+[04:37] “Gui, você criou as duas funções. Você tem as duas funções, você tem a que cria o aluno mock e a que deleta o aluno mock. Mas nós precisamos exibir esse aluno, testar esse aluno. Então o que eu vou fazer?” Quando temos a nossa função que testa os alunos, olha só.
+
+[04:55] Fazemos a conexão das nossas variáveis setup - aqui embaixo. Nós conectamos com o banco de dados. Depois que nós conectamos, o que eu vou fazer? Eu vou criar um aluno, CriaAlunoMock(). Ele vai criar um determinado aluno no banco de dados.
+
+[05:09] Ele vai fazer toda a função e, no final, o que eu quero? Eu quero que ele delete esse aluno. Então depois que essa função for toda executada, eu vou colocar aqui no defer, não esqueça de deletar o aluno mock, defer DeletaAlunoMock(). E ele vai deletar aqui o aluno.
+
+[05:23] O que eu vou fazer, só para conseguirmos visualizar esse aluno? Eu vou tirar esse //defer DeletaAlunoMock(), para vermos esse aluno criado. fmt.println(), eu vou passar aqui a (resposta.Body), para visualizarmos esse aluno, que de fato ele foi criado. Vou rodar o meu teste - estou só limpando aqui - go test.
+
+[05:48] Ele rodou e ele falou: nós temos um aluno é o ID 14, foi criado nesta data e tem aqui o aluno - cadê o CPF dele? É esse, e o nome do aluno teste está aqui em cima, "Nome do Aluno Teste". Só que esse aluno está no banco de dados. Se eu der uma requisição, eu subo o meu servidor e dou uma requisição "Get" para alunos, temos aquele aluno, "Nome do Aluno Teste" criado.
+
+[06:11] Não é o que eu quero fazer. Eu quero usar esse aluno teste, depois que eu faço o teste, eu quero deletar todo esse aluno. Então colocamos o defer DeletaAlunoMock() e maravilha, não temos mais a preocupação de executar um teste que não tenha ninguém cadastrado. Nós garantimos que, neste teste, terá pelo menos 1 registro aqui dentro.
+
+@@04
+Testando a busca por CPF
+
+[00:00] Vamos realizar mais um teste? No endpoint que eu queria testar, nós temos alguns aqui, é esse da busca por CPF.
+[00:06] O que acontece? Na nossa aplicação - deixa eu colocar ela para rodar aqui, go run main.go, eu vou criar uma pessoa com uma requisição "Post" - deixa eu só ver se eu não tenho ninguém, que se eu tiver alguém eu já deixo aqui. Maravilha, temos o aluno 14, que é o aluno teste.
+
+[00:25] O CPF dele é esse aqui: "12345678901". Se eu tenho aqui https://localhost:8080/alunos/cpf/12345678901, o valor do CPF, ele me devolve exatamente esse aluno que nós temos.
+
+[00:35] Então conseguimos buscar por CPF, isso ficou bem legal. Deixa eu minimizar o terminal para nós vermos. Nós temos essa busca. Eu quero justamente testar esse cenário aqui. O que precisaremos fazer? Primeiro vamos criar uma função de teste, colocar o prefixo que é importante, que é o Test, eu vou colocar func TestBuscaAlunoPorCPFHandler(), que lida com essa requisição.
+
+[01:05] Temos (t *testing.T). Agora, o que eu vou fazer? Vamos criar aqui a nossa função. Primeiro, essa nossa função, que busca o aluno por CPF, precisa de conexão com o banco de dados? Precisa, então database.ConectaComBancoDeDados(). Essa nossa função, precisamos de um recurso prévio criado?
+
+[01:30] Sim, precisamos criar um determinado aluno mock, CriaAlunoMock(). Então eu já vou criar esse aluno e eu já vou falar: quando acabar toda essa função, você delete esse aluno mock. defer DeletaAlunoMock(). O que eu preciso fazer também?
+
+[01:42] Eu vou precisar criar um cenário, uma rota, uma instância do Gin, então r := SetupDasRotasDeTeste(). Agora sim podemos criar, registrar essa rota que nós temos, r.GET("/alunos/cpf/:cpf", controllers.BsucaAlunoPorCPF). Vou colar aqui essa rota. Temos essa rota registrada, o que eu quero fazer agora é armazenar uma requisição.
+
+[02:07] Uma requisição para esse endpoint, ela será assim, eu quero pegar o req, _ := http.NewRequest(), que já sabemos. A ação, que vamos fazer, será uma ação get, tudo maiúsculo, agora sim. Depois precisamos passar qual é o path que vamos utilizar, será ("GET", "/alunos/cpf/12345678901, nil"), e o valor do CPF deste aluno, que é esse "1234578901".
+
+[02:38] Vou copiar aqui. Temos algum campo, que vamos passar extra? Não, não temos nada que queremos passar no corpo dessa requisição. Teremos também uma resposta, que vamos armazenar com resposta := httptest.NewRecorder().
+
+[02:57] O que eu vou fazer? Efetivar: realize essa requisição e armazene esta resposta com r.ServeHTTP(), armazenando a resposta e a requisição que queremos fazer, que já temos registrada, que é essa (resposta, req). Ele vai fazer essa requisição. No final, queremos verificar o quê?
+
+[03:17] Se, quando buscamos um aluno, se o status code é igual, assert.Equal(). Eu vou passar aqui o nosso teste, o nosso ponteiro de teste, vou passar o nosso Http, (t, http.StatusOK, ), e vou passar a resposta, resposta.Code). Temos aqui o nosso teste criado.
+
+[03:55] Vamos realizar esse teste - antes deixa eu ver o meu servidor, está rolando. Eu vou deletar esse aluno, para garantirmos que não tem erro. Ou melhor, não vamos deletar, vamos deixar com esse erro? Vamos ver esse erro explodindo? Nós teremos dois alunos. Vou rodar o meu teste, vamos visualizar. Não estourou nenhum erro.
+
+[04:12] Nós temos dois alunos criados com o mesmo ID. Só que tem uma coisa que está me preocupando, olha só - deixa eu rodar o nosso servidor só para eu tirar esse aluno. Não explodiu nenhum erro na cara, o computador está funcionando normal. Eu quero deletar o aluno com o ID 14. https://localhost:8080/alunos/14, deleto o aluno 14. Maravilha, não temos ninguém aqui, justamente o que queremos.
+
+[04:40] Está vazio, nós só queremos os alunos nossos de teste. Só que tem algo que me preocupa, olha só, essa é a mensagem de teste, a resposta de teste.
+
+[04:48] É uma bagunça, é muita informação para ler, é difícil conseguirmos entender quais testes estão rodando, quais testes estão falhando. Pensando nisso, existe uma forma de conseguirmos falar: simplifique as mensagens de teste, eu quero só o modo de release dos testes, não precisa detalhar tudo.
+
+[05:05] Onde fazemos isso? Na nossa função de SetupDasRotasDeTeste(), eu posso falar gin.Mode(). Aqui dentro eu vou passar que eu quero usar o Gin no modo de release, (gin.ReleaseMode). Salvo essa linha. Temos uma mensagem, porque não é o mode, é o gin.SetMode(gin.ReleaseMode), escrevi errado.
+
+[05:28] Então eu setei o modo de release para conseguirmos ver as instâncias do Gin. Eu vou rodar aqui, go test, olha que interessante como as nossas mensagens serão exibidas de forma mais organizada.
+
+[05:39] Muito melhor. Se eu minimizar a tela, que ela está grande, dá para vermos exatamente qual endpoint estamos testando, qual o método que estamos utilizando, e ele fala aqui que nós passamos nos testes e tal, e deu um sucesso, foi uma maravilha.
+
+[05:53] Então você precisa de mais informações para conseguir fazer um teste - puxa, eu quero ver, de fato, as mensagens, tudo o que aconteceu - podemos usar o modo normal. Ou comentar essa linha do Gin mode, ele já vai exibir sem ser no modo release. Dessa forma conseguimos visualizar os nossos testes de uma forma mais simples.
+
+[06:14] “Puxa, Gui, eu quero fazer outra coisa, eu quero testar apenas uma requisição, não quero testar tudo, como eu faço?” Vamos lá, nós temos na nossa aplicação - deixa eu rodar de novo, só para visualizarmos. Nós temos três testes, o teste da saudação, o teste da lista de alunos e agora o teste que busca o aluno por CPF.
+
+[06:36] O que eu quero fazer agora é executar só um desses testes, eu quero executar só o primeiro. Deixa eu pegar só esse primeiro teste, o teste TestVerificaStatusCodeDaSaudacaoComParametro. Vou clicar, "Ctrl + C", vou copiar o nome desse teste, vou no terminal e digito: go test -run e vou passar quem? O nome do teste que eu quero executar.
+
+[06:58] Então go test -run TestVerificaStatusCodeDaSaudacaoComParametro. Ele executa só esse teste. Dessa forma conseguimos otimizar para não executar todos os testes que nós temos.
+
+[07:08] O go test, ele vai executar todo mundo. O go test -run, seguido do nome do teste, ele vai executar o teste que estamos listando ali.
+
+@@05
+A API diz...
+
+Um aluno estava escrevendo um teste que verifica o endpoint de saudação, como vimos em aula, porém não obteve sucesso. Então, resolveu compartilhar seu código e o resultado de seus testes, como ilustra os códigos abaixo:
+Código do teste:
+1. func TestVerificaStatusCodeDaSaudacaoComParametro(t *testing.T) {
+2.         r := SetupDasRotasDeTeste()
+3.         r.GET("/:nome", controllers.Saudacoes)
+4.         req, _ := http.NewRequest("GET", "/", nil)
+5.         resposta := httptest.NewRecorder()
+6.         r.ServeHTTP(resposta, req)
+7.         assert.Equal(t, http.StatusOK, resposta.Code, "Deveriam ser iguais")
+8.         mockDaResposta := `{"API diz":"E ai gui, Tudo beleza?"}`
+9.         respostaBody, _ := ioutil.ReadAll(resposta.Body)
+10.         assert.Equal(t, mockDaResposta, string(respostaBody))
+11. }COPIAR CÓDIGO
+Resultado do teste:
+Messages:       Deveriam ser iguais
+    main_test.go:47: 
+                Error Trace:    main_test.go:47
+                Error:          Not equal: 
+                                expected: "{\"API diz\":\"E ai gui, Tudo beleza?\"}"
+                                actual  : "404 page not found"
+
+                                Diff:
+                                --- Expected
+                                +++ Actual
+                                @@ -1 +1 @@
+                                -{"API diz":"E ai gui, Tudo beleza?"}
+                                +404 page not foundCOPIAR CÓDIGO
+Analisando o código acima, podemos afirmar que:
+
+O erro se encontra na linha 4 do código de teste onde registramos a requisição.
+ 
+Alternativa correta! O erro neste caso foi não ter passado nenhum valor como parâmetro. A forma correta seria alterar a chamada da função para http.NewRequest("GET", "/gui", nil).
+Alternativa correta
+O resultado do teste indica que o valor esperado não é igual ao valor atual ou recebido e deveriam ser iguais.
+ 
+Alternativa correta! Ler o resultado dos testes parece ser difícil no começo mas com tempo e prática, vamos ganhando experiência.
+Alternativa correta
+O erro se encontra na linha 4 do código de teste onde registramos a requisição e passamos nil como terceiro parâmetro da função http.NewRequest.
+
+@@06
+Faça como eu fiz
+
+Chegou a hora de você seguir todos os passos realizados por mim durante esta aula. Caso já tenha feito isso, excelente. Se ainda não fez, é importante que você implemente o que foi visto no vídeo para poder continuar com a próxima aula, que tem como pré-requisito todo o código escrito até o momento.
+Caso não encontre uma solução nas perguntas feitas por alunos e alunas deste curso, para comunicar erros e tirar dúvidas de forma eficaz, clique neste link e saiba como utilizar o fórum da Alura.
+
+https://cursos.alura.com.br/comunicando-erros-e-tirando-duvidas-em-foruns-c19
+
+@@07
+O que aprendemos?
+
+Nesta aula:
+Criamos um teste que garanta o comportamento da listagem de alunos;
+Geramos um aluno mock para ser usado em nossos testes;
+Realizamos o teste do enpoint que busca um aluno por CPF.
+Na próxima aula:
+Vamos testar a busca por ID, e os métodos DELETE e PATCH da nossa API!
