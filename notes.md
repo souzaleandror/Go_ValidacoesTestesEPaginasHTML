@@ -639,3 +639,205 @@ Geramos um aluno mock para ser usado em nossos testes;
 Realizamos o teste do enpoint que busca um aluno por CPF.
 Na próxima aula:
 Vamos testar a busca por ID, e os métodos DELETE e PATCH da nossa API!
+
+
+#### 08/10/2023
+
+@04-Aprofundando em testes
+
+@@01
+Projeto da aula anterior
+
+Aqui você pode baixar o zip da aula 03 ou acessar os arquivos no Github!
+
+https://github.com/alura-cursos/api_rest_gin_go_2-validacoes-e-testes/archive/refs/heads/aula_3.zip
+
+https://github.com/alura-cursos/api_rest_gin_go_2-validacoes-e-testes/tree/aula_3
+
+@@02
+Testando a busca por ID
+
+[00:00] Nesse próximo teste, que eu vou fazer, quero realizar algo diferente. Se observarmos, em todos os testes estamos verificando o status code da resposta, tendo o acesso com o banco de dados ou não. O que eu quero fazer agora é testar, de fato, um determinado conteúdo. O que eu vou fazer? Olhando nas rotas, podemos escolher algum recurso para testarmos. Eu quero testar esse recurso que lista os alunos por ID.
+[00:22] Já vou até copiar essa linha, e vamos começar a criar a nossa função de teste. Eu vou criar uma função, func TestBuscaAlunoPorIDHandler(), apontando uma instância para (t *testing.T). Vamos começar com o nosso teste. Primeiro, esse teste precisará do banco de dados? Sim, nós queremos buscar um aluno do nosso banco de dados, database.ConectaComBancoDeDados().
+
+[00:55] Neste teste, nós precisamos de um aluno mock? Como vamos buscar um aluno por ID se não temos nenhum aluno cadastrado? Mas nós temos aqui o CriaAlunoMock() e, no final, depois de todo o nosso teste realizado, defer DeletaAlunoMock().
+
+[01:11] Então temos aqui já o aluno para ser criado. Nós precisaremos dessa nossa instância - do Gin não, r := SetupDasRotasDeTeste(). Vamos cadastrar aqui a nossa primeira rota, r.GET("/alunos/:id", controllers.BuscaAlunoPorID). Eu só copiei essa nossa linha 12 do handle requests.
+
+[01:29] Então já temos aqui a nossa rota, vamos começar a programar para realizar esse nosso teste. Eu quero realizar esse código de um jeito diferente, não quero o status code quando eu for fazer a minha assertação, quando eu falar assert equal, não quero que seja igual a status code.
+
+[01:44] Eu quero pegar, de fato, eu vou realizar uma busca do aluno por ID e quero verificar se, por exemplo, o nome, o CPF e o RG deste aluno possuem esses dados, com base no aluno mock. Então vamos lá, nós já temos essas linhas feitas, a primeira coisa, vamos criar o path da nossa busca, para fazer bem passo a passo.
+
+[02:06] path := "/alunos/" e aqui vamos passar um ID. Que ID é esse, Guilherme? Esse ID é esse ID que temos aqui em cima.
+
+[02:22] Uma variável, o escopo do nosso pacote, então nós podemos usar. Eu vou colocar um + e vou converter essa variável, que é do tipo inteiro, para o tipo string, para conseguirmos realizar essa concatenação. Para isso vou colocar aqui := "/alunos" + strconv.. Aqui vai uma dica: sempre que queremos converter um inteiro para uma string, do int para o async, será sempre do strconv.Itoa(), int para o async.
+
+[02:49] E aqui vamos passar o nosso valor, o nosso (ID). Temos o nosso path da busca, vou até dar o nome para ele, pathDaBusca.
+
+[02:59] Agora, com esse pathDaBusca, vamos registrar a nossa primeira requisição, req, _ := http.NewRequest(). A nossa requisição, ela será com o verbo get, será uma ação get, vou passar o nosso path da busca. Terá algum valor que vamos passar no corpo dessa requisição? Não, não terá nenhum valor, ("GET", pathDaBusca, nil).
+
+[03:21] Então nós criamos o aluno, conectamos com o banco de dados, registramos essa rota e já fizemos como essa requisição vai acontecer. Como sempre fazemos, teremos uma resposta, quem vai armazenar essa resposta será o resposta := httptest.NewRecorder().
+
+[03:39] Temos esses caras, vamos de fato realizar essa requisição: t.ServerHTTP(), passando a nossa resposta e passando a nossa requisição, (resposta, req). Temos todo mundo aqui, está tudo certo, fizemos a requisição, agora chegamos no finalmente. Como vamos pegar, de fato, desse aluno mock, que nós criamos, o nome dele, por exemplo?
+
+[04:03] Eu vou fazer o seguinte, eu vou criar uma variável que eu vou chamar de var alunoMock, e vou falar que ela será do tipo models.Aluno. Agora o que eu vou fazer será o seguinte, eu vou criar - toda essa informação que vamos pegar da resposta, ela vem de um determinado tipo.
+
+[04:35] Então posso colocar do tipo string, posso colocar do tipo bytes, e tem uma vantagem, se eu pego a minha resposta, por exemplo resposta.Body, e eu falo para ela que ela será do tipo bytes, resposta.Body.Bytes(), por exemplo, o que eu poderia fazer é converter esse tipo bytes para o tipo JSON, armazenando toda essa minha conversão dentro desse alunoMock.
+
+[04:56] Para isso, eu vou usar um cara, aqui no .Bytes, chamado json.Unmarshal(resposta.Body.Bytes(), ). Agora sim, o que ele vai fazer? Pega todos esses bytes aqui e converta para JSON. Mas onde eu armazeno, onde eu guardo toda essa informação? Dentro da nossa variável alunoMock, resposta.Body.Bytes(), &alunoMock). Esse alunoMock aqui não tem absolutamente nada a ver com esse do nosso CriaAlunoMock por enquanto.
+
+[05:30] Esse é o nosso aluno que nós sabemos que terá que ser igual a ele. Então pegamos o corpo daquela requisição e armazenamos no alunoMock.
+
+[05:39] Eu falei que não tem nada a ver, mas eles não têm ligação ainda, eles só terão ligação depois que a requisição for feita. Então eu faço a requisição, ele vai pegar o corpo dessa resposta e vai armazenar com base nesse nosso aluno, nesses dados que recebemos no corpo. O que eu vou fazer agora?
+
+[05:56] Antes de fazermos a nossa assertação, eu vou fazer o seguinte, fmt.Println() e vou colocar, aqui dentro, por exemplo o nosso (alunoMock.- repare que ele já dá aqui, CPF, quando foi criado, o ID, o nome.
+
+[06:13] Eu quero ver, por exemplo, o nome desse alunoMock, (alunoMock.Nome). Nós não temos nada neste teste, este TestBuscaAlunoPorIDHanlder. O que eu vou fazer? Eu vou copiar o nome da função. Eu quero executar um teste específico, go test -run, "Ctrl + V", o nome do teste, go test -run TestBuscaAlunoPorIDHanlder.
+
+[06:29] Quando eu dou um "Enter", olha que interessante, ele vai me retornar uma mensagem: nome do aluno teste. Exatamente o nome que nós temos quando criamos esse nosso aluno.
+
+[06:39] Então o que nós fizemos aqui, de interessante? Olha só, nós pegamos o corpo da requisição e pegamos um campo específico, que é esse alunoMock. O que eu quero fazer agora é a minha assertação, assert.Equal(). Aqui dentro eu vou passar o nosso T, o nosso valor de teste, e vou falar que o valor esperado e o alunoMock.Nome.
+
+[07:04] Qual é o nome que esperamos que esse aluno tenha, o valor esperado? Vamos fazer o contrário, o valor esperado é que o aluno tenha exatamente esse nome que apareceu aqui, o "Nome do Aluno Teste". E o valor que vamos receber, que foi o valor que eu armazenei dentro do alunoMock, com base na resposta que nós lemos em bytes e convertemos ele parta JSON, será esse aqui, (t, "Nome do Aluno Teste", alunoMock.Nome).
+
+[07:39] O que eu vou fazer? Eu posso rodar mais de uma assertação neste caso. Nós temos o alunoMock.Nome, temos o alunoMock.CPF e temos o alunoMock.RG. Eu quero fazer a assertação desses três valores. Então o CPF é o 12345678901, vou colocar aqui, o CPF será esse cara assert.Equal(t, "12345678901", alunoMock.CPF).
+
+[08:00] O RG será até o valor 9, assert.Equal(t, "123456789", alunoMock.RG), os 9 dígitos. Então, só para ficar um pouco diferente do que vínhamos fazendo, do status code - eu posso colocar essa mesma validação aqui também? Posso, posso colocar esse assert.Equal(t, http.StatusOK, resposta.Code) como status code também.
+
+[08:17] Repare, eu estou validando se exatamente o nome do aluno, que eu estou esperando, e o nome do corpo, que vem na minha resposta, são os mesmos. Eu vou realizar esse teste. Assim que eu realizo esse teste de BuscaAlunoPorIDHandler, repare que passamos e temos as informações certas.
+
+[08:32] Vou fazer algo incrível aqui, olha só. Eu vou alterar, o nome do aluno não será mais o Nome do Aluno Teste, será Nome do Aluno Testi, com I. Rodando o teste mais uma vez, olha que interessante o que ele vai falar que um teste aqui não passou, o teste falhou. Onde ele falhou? Ele vai mostrar: o nome do aluno teste - aqui, o que eu recebi e o que devia ser.
+
+[08:53] Então eu recebi esse "Nome do Aluno Teste" e o que deveria ser era esse conteúdo aqui. Lembrando que podemos deixar os nossos testes ainda mais descritivos passando alguma informação. Por exemplo, eu posso passar uma string e falar - nossa, estou ruim aqui. assert.Equal(t, "Nome do Aluno Teste", alunoMock.Nome, "Os nomes devem ser iguais").
+
+[09:19] Desse tipo. Rodando o nosso teste mais uma vez, olha que interessante. Vou rodar mais uma vez, limpar a tela. Temos aqui uma mensagem: “Os nomes devem ser iguais”.
+
+[09:30] Nós temos a mensagem diferente. Por quê? Um virou "Testi", o nome que eu falei que eu estava esperando, mas o que eu recebi foi "Nome do Aluno Teste". Claro que eu não vou deixar assim, vamos deixar o nome certo, com o "Nome do Aluno Teste".
+
+[09:43] Esse é o sobrenome, "Aluno Teste". Ficou certo agora, está uma maravilha. Então repare, dessa forma conseguimos pegar exatamente um campo específico para fazermos a nossa assertação e o nosso teste.
+
+@@03
+Testando o método DELETE
+
+[00:00] O nosso próximo teste é um teste relacionado a deletar um determinado aluno da base de dados. Então já vou copiar essa linha do nosso “roots.go”, do HandleRequests().
+[00:11] É o nosso método que deleta. Vamos escrever aqui o nosso teste que deleta um aluno para verificar se esse comportamento está funcionando de forma correta, func TestDeletaAlunoHandler(). Vou passar (t *testing.T) e vamos começar a escrever o nosso código.
+
+[00:36] O nosso código precisa de conexão com o banco de dados, database.ConectaComBancoDeDados(). Se eu quero deletar um aluno eu preciso criar esse aluno. Eu vou criar CriaAlunoMock() e eu peço para deletar aqui – agora é um ponto interessante: será que nós fazemos o defer para deletar esse aluno?
+
+[00:53] Se vamos deletar de fato do banco de dados, nós não precisamos colocar o defer aqui. Então vamos lá, teremos aqui a nossa instância – opa, falta antes a nossa instância de setup, r := SetupDasRotasDeTeste(). Agora sim, cadastramos uma rota para deletar um aluno, r.DELETE(“/alunos/:id”, controllers.DeletarAluno).
+
+[01:10] No endpoint de alunos, barra, passou um determinado ID, deleta esse aluno. Já que temos essa rota cadastrada, vamos criar agora o nosso path de busca, pathDeBusca := “”. Ele vai ser o nosso endpoint, := “/alunos/” + e esse ID nós vamos concatenar, convertendo com strconv.Itoa(ID), de int para async, que é o que precisamos.
+
+[01:42] E vou passar o valor (ID), que nós já temos. Nós já temos o path, vamos armazenar a nossa busca. Então a requisição, req, _ := http.NewRequest(). Essa requisição que vamos fazer, qual é o tipo dela? O tipo é o delete. Qual será o path que vamos utilizar? Será o path de busca. Qual é o caminho dele? pathDeBusca, que é o delete dos alunos.
+
+[02:10] Para finalizar, não passamos nada como corpo dessa requisição, ("DELETE", pathDeBusca, nil). Vamos armazenar em uma resposta, resposta := httptest.NewRecorder(). Agora sim, vamos realizar essa requisição, r.ServeHTTP(resposta, req), passando a resposta e a requisição.
+
+[02:38] Nós fizemos a requisição, o que queremos verificar agora é se de fato tivemos o status correto. Quando deletamos alguém o estado status que geralmente recebemos é o 200. Eu vou colocar aqui um assert.Equal(http.StatusOK, resposta.Code). Vamos salvar, parece que está tudo certo. Só esqueci de passar aqui o nosso parâmetro t aqui, assert.Equal(t, http.StatusOK, resposta.Code). Agora sim.
+
+[03:17] Vamos lá, abrindo o nosso terminal, vou jogar aqui para cima, para visualizarmos, go test e vou colocar o nome desse teste, que é TestDeletaAlunoHandler. Deixa eu apagar aqui, então o terminal é go test -run TestDeletaAlunoHandler, para rodarmos esses testes específico, que é o TestDeletaAlunoHandler. Quando eu dou um "Enter", temos a mensagem.
+
+[03:37] Olha que interessante, como estamos rodando no banco de dados de desenvolvimento, ele coloca esse aluno e já deleta esse aluno. Será que ele foi deletado mesmo? Vamos ver, vou subir o meu servidor, vou no Postman e vou dar um Get para alunos. Quando eu carrego aqui, não temos ninguém, de fato.
+
+[03:51] Nós criamos e ele foi deletado. Nesse caso, nem precisamos utilizar a função que deleta os alunos mock da nossa aplicação. Agora temos a nossa função que deleta um aluno validada.
+
+@@04
+Testando a atualização
+
+[00:00] Analisando as nossas rotas, já fizemos diversos testes para verificar o comportamento da nossa aplicação. Porém, ainda não realizamos um teste que garanta que o comportamento de atualizar um aluno, de editar os dados de um aluno, vai acontecer de forma correta. Por isso, vamos fazer esse teste agora?
+[00:18] Vamos lá, a primeira coisa, para não perdermos o costume, uma função de teste, que eu vou chamar de - deixa eu ver os nomes que eu estou usando: deleta, busca, teste busca. Aqui, TestListandoTodosOsAlunosHandler, vou deixar TestListaTodosOsAlunosHandler, só para ficarmos com o mesmo nome.
+
+[00:33] Lista, verifica, agora está certo. Vou deixar o nome então de func TestEditaUmAlunoHandler(t * testing.T) e vamos começar a escrever o nosso teste. Se queremos editar um aluno, o que nós precisamos? Precisamos da conexão com o banco de dados, database.ConectaComBancoDeDados().
+
+[01:01] Precisaremos de um aluno, pelo menos, no banco de dados. Nós temos o CriaAlunoMock(). Criei o aluno mock, depois de executarmos tudo, delete esse aluno mock, defer DeletaAlunoMock(). O que vamos precisar? Do path. Nós temos aqui a nossa função do Gin, r := SetupDasRotasDeTeste(), nós vamos registrar essa rota do patch.
+
+[01:23] Vou exatamente copiar ela. Lembrando que o patch, nós editamos todos os campos, não editamos apenas um campo dentro do corpo do nosso JSON, vamos editar todos os campos. Então o que aconteceu aqui?
+
+[01:36] Eu criei, nesse banco de dados, nesse meu teste, esse aluno aqui, do CriaAlunoMock. Nome do Aluno Teste, com esse CPF e com esse RG. Eu quero alterar esses campos, eu quero editar. Então eu vou deixar, por exemplo, o nome do aluno o mesmo, só que o CPF e o RG eu quero alterar. Vamos supor que algum valor aqui foi cadastrado com um dígito errado, então precisamos garantir esse comportamento. Vamos armazenar então a nossa configuração desse aluno que nós vamos criar.
+
+[02:06] Eu vou falar que aluno := models.Aluno{} e vou criar os dados desse aluno que eu quero editar. Aqui em cima nós temos assim - eu vou copiar esses parâmetros para nós vermos, todas essas informações do nome, nome do aluno, CPF e o RG dele. Eu vou colocar isso aqui embaixo, entre as chaves.
+
+[02:29] Vamos editar, esse aluno, vamos supor que o CPF dele será "123456789"- eu tenho uma ideia melhor, vou colocar um "47" na frente, "47123456789", que vai parecer mais um dígito de CPF, vai ficar mais legal. No RG eu vou colocar "123456700".
+
+[02:52] Então nós queremos editar as informações desse aluno para essa. Vamos ver então se o comportamento do nosso controller, vai garantir essa alteração. Nós já temos aqui os dados do aluno que queremos alterar. O que nós precisamos? Esse aluno, que eu acabei de criar com base no modelo, ele está vinculado com um tipo que o Go entende, que a struct entende.
+
+[03:14] Precisaremos converter isso para JSON. Então eu vou chamar de valorJson := e vou dar um nome. Para eu fazer essa conversão, eu vou usar o := json.Marshal() e vou passar o meu (aluno) para dentro, e temos aqui esse nosso aluno. Repare que ele está dando uma mensagem porque essa função retorna também uma validação, uma notificação de erro. É só colocar aqui vírgula e underline na frente e não temos essa verificação, valorJson, _ :=.
+
+[03:41] Então temos o aluno, temos o valor dele em JSON. O que eu preciso fazer? Vamos registrar a nossa requisição, como ela vai ser. Então req, _ :=. Eu vou falar que ela será do := http.NewRequest() e vamos lá, vamos começar. O nosso método será o método patch. O método ("PATCH") aqui - cuidado com a escrita do método patch, ele é bem enganoso, podemos esquecer esse "C" e tal, então não se esqueçam, patch escreve-se desse jeito.
+
+[04:12] Falo por experiência própria, já sofri muito por causa disso. Agora tem um ponto interessante: temos que passar, aqui no segundo parâmetro, o path que vamos editar. Vamos criar esse path? Eu vou colocar ele bem passo a passo, eu vou colocar pathParaEditar :=. Ele será assim, ele terá o := "/alunos/" + e terá o ID desse aluno que nós queremos editar.
+
+[04:35] Vamos colocar um +, vamos usar a nossa + strconv. para converter o valor inteiro que temos para string. Então + strconv.Itoa(), int to async, int para string, e vou passar o valor do (ID). Agora sim, já temos esse path, vou passar no parâmetro o ("Patch", pathParaEditar,.
+
+[04:58] Para finalizar, olha que interessante. Em todos os outros casos, nos nossos outros testes, nós não passávamos um valor para o corpo da requisição. Agora vamos passar. Só que temos um ponto importante: esse valor que temos em JSON, nós não passamos ele direto, precisamos passar ele no formato de bytes.
+
+[05:16] Então eu vou colocar aqui ("PATCH", pathParaEditar, bytes.NewBuffer()) e vou passar aqui o (valorJson). Pronto, dessa forma eu consegui colocar no corpo dessa requisição tudo o que precisamos para conseguir validar esse cara.
+
+[05:31] Teremos também que armazenar a resposta, para conferirmos se, de fato, essa atualização aconteceu, então resposta := httptest.NewRecorder(). Vamos realizar essa requisição, r.ServerHTTP(), passando a resposta e passando também a requisição,(resposta, req). Escrevi errado, resposta, agora sim, passando a resposta e a requisição.
+
+[06:01] Olha, o nosso teste, o nosso cenário de teste já está acontecendo. O que eu quero fazer agora? Eu quero verificar não o status code, o status code nós já sabemos, eu quero verificar assim: vá na resposta que você teve e pegue o CPF e o RG do aluno e verifique se ele está igual com esses valores do teste, que eu alterei. Vamos fazer isso?
+
+[06:21] A primeira coisa, vamos precisar de um aluno para fazer essa verificação, então vou chamar de alunoMockAtualizado, vou criar uma nova variável para ele var alunoMockAtualizado models.Aluno. Depois, o que eu precisarei fazer é pegar os dados dessa requisição, dessa resposta do corpo, e colocar dentro dessa variável AlunoMockAtualizado.
+
+[06:46] Para isso, vou usar aqui o json.Unmarshal(), e vou passar aqui, primeiro, (resposta.Body.Bytes(), ) e o endereço de memória em que queremos armazenar toda essa informação aqui, no &alunoMockAtualizado.
+
+[07:07] O que eu fiz aqui? Eu peguei todo o corpo da resposta e falei: coloque dentro do alunoMockAtualizado. Agora podemos fazer as nossas assertações, as nossas verificações. Então assert.Equal(), porque precisa ser igual, eu vou passar aqui, por exemplo, devolvendo o nosso teste e vou passar qual é o valor que esperamos.
+
+[07:27] Eu espero esse valor aqui de cima para o CPF. Coloquei o CPF - o 47 na frente, vírgula, e vou colocar agora o conteúdo desse aluno atualizado, (t, "47123456789", alunoMockAtualizado.CPF). Vou fazer a mesma coisa, "Ctrl + Shift + seta para baixo" para ele copiar, para o RG, para verificarmos esses três dados.
+
+[07:55] O RG e, no lugar do CPF, será o RG, assert.Equal(t, "123456700", alunoMockAtualizado.RG). Para finalizar, só para ficar bem bonito, eu vou colocar também o nome do aluno, para mostrar que o nome do aluno nós não alteramos. Vou pegar o Nome do Aluno Teste, esse é o nome do aluno que nós queremos e aqui, no lugar do alunoMockAtualizado.RG eu vou colocar o alunoMockAtualizado.Nome.
+
+[08:17] Salvei esse código, vamos para o nosso terminal. Vou rodar aqui o nosso go test -run com o nome desse teste, go test -run TestEditaAlunoHandler. Dou um "Enter" e vamos ver o que vai acontecer. Maravilha.
+
+[08:34] Nosso teste passou. Então estamos com todas as informações atualizadas. Será que foi mesmo? Vamos verificar, fmt.Println(), vou colocar aqui o aluno mock com o CPF, só para visualizarmos, (alunoMockAtualizado,CPF). Vou rodar mais uma vez esse teste, para visualizarmos qual o valor do CPF.
+
+[09:01] Aqui temos o valor, "47123456789" - lembrando que quando nós criamos esse aluno nós temos o valor "12345678901". Agora, sucesso, temos todas essas informações certas. Vou tirar o fmt.Println, nós não precisamos validar, já vimos que deu certo. Agora sim temos o nosso teste, que edita um aluno, feito de forma correta.
+
+@@05
+ID do aluno Mock
+
+Nesta aula, criamos um teste que verifica a Busca de Aluno por ID como ilustra o código abaixo:
+func TestBuscaAlunoPorIDHandler(t *testing.T) {
+        database.ConectaComBancoDeDados()
+        CriaAlunoMock()
+        defer DeletaAlunoMock()
+        r := SetupDasRotasDeTeste()
+        r.GET("/alunos/:id", controllers.BuscarAlunoPorID)
+        pathDaBusca := "/alunos/" + strconv.Itoa(ID)
+        req, _ := http.NewRequest("GET", pathDaBusca, nil)
+        resposta := httptest.NewRecorder()
+        r.ServeHTTP(resposta, req)
+        var alunoMock models.Aluno
+        json.Unmarshal(resposta.Body.Bytes(), &alunoMock)
+        assert.Equal(t, "Nome do Aluno Teste", alunoMock.Nome, "Os nomes devem ser iguais")
+        assert.Equal(t, "12345678901", alunoMock.CPF)
+        assert.Equal(t, "123456789", alunoMock.RG)
+        assert.Equal(t, http.StatusOK, resposta.Code)
+}COPIAR CÓDIGO
+Sabendo disso, analise as afirmações abaixo, assinale apenas as afirmações verdadeiras em relação ao código acima:
+
+Criar um aluno para o teste garante que o teste irá validar o comportamento correto da aplicação.
+ 
+Alternativa correta! Garantimos o funcionamento do teste, caso não exista aluno no banco de dados, pois usamos o aluno mock.
+Alternativa correta
+Não é necessário criar um aluno para o teste. O certo seria testar com os dados de alunos criados no banco de desenvolvimento.
+ 
+Alternativa correta
+Sempre teremos um ID válido por conta da criação do aluno mock.
+ 
+Alternativa correta! Com base no código acima, sempre haverá uma busca por ID com um valor válido.
+
+@@06
+Faça como eu fiz
+
+Chegou a hora de você seguir todos os passos realizados por mim durante esta aula. Caso já tenha feito isso, excelente. Se ainda não fez, é importante que você implemente o que foi visto no vídeo para poder continuar com a próxima aula, que tem como pré-requisito todo o código escrito até o momento.
+Caso não encontre uma solução nas perguntas feitas por alunos e alunas deste curso, para comunicar erros e tirar dúvidas de forma eficaz, clique neste link e saiba como utilizar o fórum da Alura.
+
+@@07
+O que aprendemos?
+
+Nesta aula:
+Testamos a busca de alunos por ID;
+Garantimos o comportamento do método DELETE através de um teste;
+Criamos um teste que verifica a atualização dos dados de um aluno.
+Na próxima aula:
+Vamos finalizar nosso treinamento de forma incrível renderizando páginas HTML com Gin e alterando a página 404 padrão do Gin!
