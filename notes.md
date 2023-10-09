@@ -841,3 +841,253 @@ Garantimos o comportamento do método DELETE através de um teste;
 Criamos um teste que verifica a atualização dos dados de um aluno.
 Na próxima aula:
 Vamos finalizar nosso treinamento de forma incrível renderizando páginas HTML com Gin e alterando a página 404 padrão do Gin!
+
+#### 09/10/2023
+
+@05-Deletando, editando e buscando alunos
+
+@@01
+Projeto da aula anterior
+
+Aqui você pode baixar o zip da aula 04 ou acessar os arquivos no Github!
+
+@@02
+Página HTML com Gin
+
+[00:00] Após realizar uma série de validações e testes, eu quero mostrar algo incrível que o Gin é capaz de realizar. Então, olha só, o que eu vou fazer? Eu vou subir o meu servidor, com go run main.go, e vou abrir uma aba anônima no navegador, no "https://localhost:8080/alunos". O que temos aqui?
+[00:22] Temos aqui alguns alunos que criamos no banco de dados. Até aí tudo bem, mas você sabia que o Gin também é capaz de renderizar uma página HTML? Bonita, com a estrutura seguindo, coisa que não vimos ainda? Eu quero mostrar para vocês neste vídeo como isso funciona na prática.
+
+[00:38] Em primeiro lugar vou colocar essa aba para o lado, de volta ao VS Code, agora sim. Vou minimizar o meu terminal e aqui, na nossa aplicação, podemos criar um local específico para armazenarmos as nossas páginas HTML. “Puxa, Gui, vamos criar um projeto HTML agora?” Não, eu só quero mostrar que é possível renderizarmos páginas HTML também.
+
+[01:02] Eu vou criar uma nova pasta, cliquei com o botão direito no menu lateral, coloquei "New Folder", ou nova pasta, vou chamar essa pasta de "templates". Dentro do "templates" eu vou criar um arquivo chamado "index.html", que seria a nossa página de boas-vindas.
+
+[01:19] O que eu vou colocar nesse "index.html"? Eu vou colocar aqui a estrutura básica do HTML, colocar aqui index, e não vou passar nenhum valor para ele por enquanto. Por quê?
+
+[01:27] Eu quero que peguemos algumas informações do banco de dados ou algumas informações que podemos exibir na tela, então pega do controller e exibe na tela, e eu quero mostrar isso passo a passo para vocês. Eu vou no "controller.go" e vou criar uma função que será específica para renderizar algumas informações na tela.
+
+[01:49] Essa função eu vou chamar de func ExibePaginaIndex(). Mesma coisa, ela será do tipo, aqui no meu controller, (c *gin.Context). O que eu vou fazer agora? No local de exibir alguma informação do banco de dados, eu vou passar simplesmente isso aqui c.HTML().
+
+[02:21] Repare que nos nossos outros campos nós tínhamos sempre o retorno com o JSON, c.JSON, levava o status code e o aluno. Nesse caso, eu vou passar só uma mensagem mesmo, então c.HTML() e vou passar qual é o status desse HTML, (http.StatusOK, e vou passar alguma informação.
+
+[02:46] A segunda informação é qual é o nome da string que queremos renderizar. Eu vou passar aqui "index.html". Só que isso é uma string, o template que queremos renderizar, (http.StatusOK, "index.html", gin.H{}). Aqui começa a nossa brincadeira.
+
+[03:04] O que eu quero fazer? Eu quero exibir, por exemplo, uma mensagem. Então vou colocar aqui "mensagem", que será assim, entre aspas, "mensagem": "" e vou exibir a mensagem de boas-vindas, "mensagem": "Boas vindas",. Exibi essa mensagem, coloco uma vírgula aqui e sucesso, a nossa função que exibe a página index já está com uma mensagem de boas-vindas.
+
+[03:31] O que eu vou fazer? Vou no meu HTML, na minha "index.html" mesmo, e vou exibir essa mensagem dentro de uma tag <h1> - vou colocar aqui, minimizar só para não ficarmos confusos. Vou colocar <h1>{{}}</h1> e aqui dentro vamos passar o valor que queremos exibir, que é o {{.mensagem}}.
+
+[03:53] Vamos ver no controller como ficou, a nossa mensagem ficou assim. Nós queremos que exiba esse valor. Aqui, no HTML, nós passamos esse {{.mensagem}}, passamos entre chaves duplas, para embedar, esse é o nome que nós damos. O que eu posso fazer agora? Agora eu só preciso registrar uma rota para conseguir exibir essa mensagem. Então eu vou minimizar esses atalhos do lado esquerdo, vou em "route.go" e vou criar, aqui embaixo, uma rota para os meus alunos.
+
+[04:20] Será uma requisição get, r.GET(). Aqui eu vou passar o endpoint, o caminho. Eu vou falar, por exemplo, que será ("/index"). A nossa página index e vou colocar vírgula, o nosso controller, r.GET("/index", controllers.ExibePaginaIndex).
+
+[04:45] Salvei esse código, parece que está tudo ok. Só que, o que acontece? Se eu rodar o meu código agora - eu vou mostrar isso para vocês, que eu acho que faz sentido. Então se eu colocar "/index" ele vai cair nesse campo. Vamos lá, vou no navegador, coloco "https://localhost:8080/index".
+
+[05:07] Quando eu executo, temos uma mensagem que essa pasta não foi encontrada, um erro de servidor. Por quê? Em qual momento eu falei para o Gin que eu tenho páginas para serem renderizadas, que eu tenho um arquivo de template? Em nenhum, então eu preciso fazer isso. Aqui em cima, no "route.go", depois que temos a instância r := gin.Default(), eu vou colocar no Gin que temos páginas para serem renderizadas.
+
+[05:30] r.LoadHTMLGlob(), essa será a função responsável. Ele vai falar: onde estão essas páginas? Elas estão em ("templates/*"). Todas as nossas páginas HTML estão aqui dentro da pasta "template", então procure lá dentro.
+
+[05:46] Rodando de novo o nosso código, voltando no navegador, na aplicação, quando eu dou o "Enter", temos a nossa mensagem de boas-vindas. “Será mesmo, Gui?” Vamos mudar essa mensagem. Então, no lugar de exibir boas-vindas, eu vou colocar boas vindas e uma cara feliz, sorrindo, "Boas vindas :)".
+
+[06:04] Voltei no terminal, rodando o meu servidor mais uma vez. Se eu vier no navegador e atualizo, temos o nosso emoji de feliz.
+
+@@03
+Preparando o ambiente
+
+No próximo vídeo, vamos alterar a index.html. Como o foco do curso é a linguagem Go e não HTML, neste link você encontra o HTML que será usado pelo instrutor.
+Fique à vontade para alterar a estrutura da página do seu gosto!
+Este é o código que será usado pelo instrutor:
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alunos</title>
+</head>
+<body>
+  <div class="widget-wrap">
+    <h1>API - Gin e Golang</h1>
+    <div class="widget-wrap">
+        <ul id="the-list">
+            <li></li>
+        </ul>
+      </div>
+</body>
+</html>COPIAR CÓDIGO
+Sabendo disso, vamos exibir os alunos nesta página?
+
+@@04
+Exibindo alunos na index
+
+[00:00] Nós vimos como exibir mensagens do nosso controller do Go para o HTML, mas não é isso que eu quero fazer, eu quero exibir o nome dos meus alunos aqui na tela. Vamos ver como fazemos isso. Em primeiro lugar, estamos passando aqui, para o nosso HTML, através da mensagem o texto "Boas vindas".
+[00:18] Não é o que eu quero fazer. Eu quero exibir os alunos, eu quero pegar os alunos do banco de dados e passar para lá. Pensando nisso, eu vou criar uma variável, que eu vou chamar de var alunos []. Ela será uma lista com base no modelo de aluno, []models.Aluno.
+
+[00:30] Depois eu vou pedir para o banco de dados, database.DB.Find(), encontrar todos os alunos e colocar dentro dessa nossa variável de alunos, (&alunos). Como eu faço agora para pegar esses alunos e mandar para o HTML?
+
+[00:46] Eu vou selecionar aqui, vou dar o nome de "alunos": e, no lugar de colocar uma string como texto, eu vou passar quem? Os meus : alunos.
+
+[00:54] Na nossa "index.html", não temos nada, temos só esse código aqui. O que eu quero fazer é ter um "index.html" mais bonito para preparar o envio desses alunos. Nós não vamos ficar codando o HTML nesse nosso curso de Gin e Go, não é o nosso objetivo. Pensando nisso, eu vou dar um "Ctrl + C", "Ctrl + V" de um código, que está disponível para você na atividade anterior a esse vídeo, "Preparando o Ambiente". Está aqui o meu código.
+
+[01:22] O que temos neste código? Temos um código que tem já algumas classes de CSS, que vamos ver mais para frente como fazemos. O que eu preciso fazer? Eu passei no "controller.go": pegue os alunos do banco de dados e coloque nesse conteúdo desta página, para enviar para essa página para ser renderizado. Como fazemos isso na nossa página?
+
+[01:45] A primeira coisa que vamos fazer será criar um range dessa página em que nós estamos. Então queremos pegar todos os alunos e exibir o nome deles. Eu vou colocar aqui, na linha 13, vou escrever {{range}}, porque estamos escrevendo um código Go junto com o HTML, nós chamamos isso de embedar.
+
+[02:00] Vou colocar um ponto - muito importante, não se esqueçam deste ponto, ele é muito importante para funcionar. Vou fazer {{range .alunos}}. O que quer dizer isso? Quer dizer que eu vou fazer um range de todos os meus alunos. Não aqui, eu vou fazer na linha debaixo. Vou dar um "Ctrl + C" aqui. Vou limpar aqui. Então aqui, quando começa a nossa lista, terá o range desses alunos.
+
+[02:21] O que eu vou fazer na sequência? Na sequência eu quero exibir o nome desse aluno, então <li>{{.Nome }}</li>, que é o atributo que eu quero mostrar do aluno, e fecho com duas chaves depois.
+
+[02:38] Depois que eu fecho esse campo, eu preciso, de alguma forma, finalizar esse loop em que eu estou. Eu estou em um loop: pegue o primeiro e mostre o nome, pegue o segundo aluno e mostre o nome, pegue o terceiro aluno e mostre o nome. Para eu finalizar isso, eu escrevo {{end}}.
+
+[02:54] Então eu vou para o meu terminal, mais uma vez, "Ctrl + C" para derrubar ele, vou rodar mais uma vez o código go run main.go e vou para o nosso navegador para vermos o que aconteceu aqui. Nós tínhamos a mensagem de boas-vindas.
+
+[03:06] Atualizando agora, GG: temos uma mensagem API - Gin e Golang e temos o nome dos meus alunos.
+
+[03:13] Só que se observarmos, essa API, essa renderização, essa página index, ela está muito simples. Vamos deixar ela um pouco mais bonita, um pouco mais elegante, colocando alguma fonte, mudando um pouco o posicionamento desses textos? É isso o que vamos aprender na sequência.
+
+@@05
+Preparando o ambiente
+
+Nos próximos vídeos, vamos estilizar páginas HTML com CSS. Como o foco do curso é a linguagem Go, neste link você encontra os arquivos CSS que serão usados pelo instrutor.
+Fique a vontade para estilizar as páginas com cores, fontes do seu gosto!
+Sabendo disso, vamos lá?!
+
+https://github.com/guilhermeonrails/api_rest_gin_go_2-validacoes-e-testes/tree/extra/assets
+
+@@06
+Estilizando com CSS
+
+[00:00] Para conseguirmos renderizar páginas HTML tivemos que registrar no Gin um carregamento, r.LoadHTMLGlob, informando a pasta que nós temos.
+[00:10] Para carregarmos arquivos estáticos, como CSS, por exemplo, precisamos fazer a mesma coisa. Então o que eu vou fazer? Eu vou criar uma pasta nova no nosso projeto, que eu vou chamar de "assets". Dentro de "assets", eu vou criar um arquivo chamado "index.css", que será responsável pela estilização da nossa página index.
+
+[00:32] Vou dar um "Ctrl + V" de um código CSS, não precisaremos escrever o código CSS. Se você quiser alterar o seu, para deixar o visual bem mais legal, você pode, fique à vontade. Mas, como o nosso foco é o Go e o Gin, não vamos investir bastante tempo criando esse código CSS.
+
+[00:49] Só para termos uma ideia, o que nós fazemos? Importamos uma fonte diferente, alteramos a cor do background, posicionamos o <H1> com tamanho diferente, com distanciamento do topo, e tem algumas configurações para a nossa web. Eu salvo esse código, vou no meu arquivo "index.html" e vou falar: eu tenho um arquivo CSS. Eu digitei link, apareceu aqui link CSS.
+
+[01:15] Eu vou fazer isso de novo, porque foi muito rápido. link, esse terceiro parâmetro aqui, "Emmet Abbreviation". Eu falo que é um arquivo de folha de estilo, stylesheet.
+
+[01:24] O que vamos fazer agora é navegar para esse nosso arquivo. Vou colocar href="../assets/index.css". Ele já nos ajuda na configuração. Nós temos o arquivo CSS dentro da pasta "assets", pegamos o index e vinculamos com esse nosso arquivo, agora é sucesso, vamos ter um visual muito bonito. Nós voltamos para o nosso projeto, no navegador, atualizamos a página e não temos visual bonito nenhum.
+
+[01:48] Está a mesma coisa. Por quê? Lembra que eu disse que precisamos configurar também o nosso Gin para falar que nós temos arquivos estáticos? Precisamos fazer essa configuração agora. Como fazemos? r.Static(), e aqui dentro vamos passar dois parâmetros - vou colocar uma vírgula aqui só para vermos.
+
+[02:06] O primeiro é caminho relativo para acessarmos as pastas de assets, será r.Static("/assets",. O segundo parâmetro - vou colocar uma vírgula aqui só para visualizarmos - ele vai falar qual é o caminho, como fazemos para chegar nessa pasta de assets. O caminho é r.Static("/assets", "./assets"). Agora sim.
+
+[02:30] Limpando o nosso terminal, parando o nosso servidor e rodando mais uma vez a nossa aplicação, quando atualizamos, agora sim, olha que coisa incrível.
+
+[02:40] Nós temos um texto grande, que aparece no título, e o nome dos meus alunos em um formato muito mais legal. É dessa forma que fazemos para conseguirmos ter arquivos CSS. Então, só para lembrarmos, o que nós fizemos? Criamos uma pasta "assets", criamos os nossos CSS, vinculamos o CSS com a página HTML, que nós precisamos.
+
+[03:02] E, no final, fizemos uma configuração do Gin, que é o r.Static, passando o path e o caminho para chegarmos nos arquivos estáticos.
+
+@@07
+Página 404
+
+[00:00] O que eu vou mostrar para você agora é simplesmente incrível, é muito legal. Olha que interessante, eu estou com o meu servidor rodando aqui, tenho as minhas rotas. Vamos supor que eu digite algum endereço, por exemplo. Não passei nada para o index, dou um "Enter", aparece um "404 page not found".
+[00:16] Esse 404 que aparece, ele é padrão do Gin. Qualquer outro endereço que eu tentar digitar, ele vai dar essa mensagem padrão. Isso quer dizer o quê? Quer dizer que quando eu não tenho nenhuma rota, eu caio nessa página. O que eu quero fazer com vocês agora é: vamos configurar a nossa aplicação Gin para mostrarmos essa página 404, mostrando esse código, essa informação, só que alteramos ela, deixamos ela com visual mais interessante.
+
+[00:45] O que eu vou fazer aqui? Vamos começar no nosso controller. Vou acessar o nosso controller, deixa eu minimizar as pastas só para não ficarmos confusos. Vou acessar o "controllers > controller.go". Vamos criar uma função específica quando não temos uma rota encontrada. Vou criar uma função, que eu vou chamar de func RotaNaoEncontrada().
+
+[01:10] Ela será do tipo (c *gin.Context), como temos por padrão. Aqui eu vou colocar c.HTML(), que é o que queremos renderizar. Aqui dentro eu vou passar qual é o status code que nós temos. O status code de não encontrado é o status not found, (http.StatusNotFound, ), o 404.
+
+[01:36] Segundo, o que vamos renderizar? Vamos renderizar uma página, que eu vou chamar de "404.html", que já vamos criar na sequência. E não temos nenhuma informação para passar, nenhum recurso para passar para essa página, (http.StatusNotFound, "404.html", nil).
+
+[01:49] Salvei. O que eu vou fazer agora será ir no nosso arquivo de rotas e eu vou criar um endpoint para essas rotas não encontradas. Então, você terá que colocar todas as possíveis rotas do mundo e vai falar que tudo o que for diferente disso será não encontrado? Óbvio que não, nem o Gin faz isso.
+
+[02:09] Então, o que acontece? Existe um recurso específico do Gin para rotas não encontradas, é o r.NoRoute(). Isso é muito legal, achei isso incrível. Quando não temos uma rota específica não adianta nem eu tentar passar aqui um caminho. Por quê? Não temos uma rota, caímos em um caminho que não registramos, não temos nenhum endpoint.
+
+[02:29] O que eu quero fazer? Vá no controllers e nos mostre a (controllers.RotaNaoEncontrada). Maravilha, é isso.
+
+[02:39] Agora vamos passar para as nossas páginas HTML e CSS. Vamos lá, a primeira coisa: na pasta de "templates" eu vou criar um arquivo novo, chamado "404.html", o mesmo nome que eu dei no nosso "controller.go", "404.html".
+
+[02:54] Vou usar o atalho do HTML5, vou colocar no título documento 404. Vou passar aqui dois campos. Não vamos criar um monte de informação. Nós podemos colocar imagem, podíamos fazer um monte de coisa, mas vamos deixar bem simples. Se você quiser colocar e configurar a sua página 404, você pode. Eu vou colocar aqui <h1>404</h1>.
+
+[03:16] Vou colocar um H3, que eu vou chamar de <h3>Procuramos em toda aplicação e não encontramos nada...</h3>. Então criamos aqui a nossa página 404.
+
+[03:39] O que eu quero fazer agora? Eu quero colocar o assets, eu quero deixar essa página com um visual diferente. Eu vou criar um assets novo, uma nova pasta, que eu vou chamar de "404.css", ele será específico para o CSS. Essa estilização de CSS está na atividade anterior a esse vídeo, no "Preparando o Ambiente".
+
+[04:01] Eu vou estalar o dedo e ela vai aparecer aqui na tela, junto com vocês. 1, 2, 3 e maravilha, em um toque de mágica já apareceu na tela para nós. Aqui tem a estilização do CSS da nossa página 404.
+
+[04:22] Nós podemos fazer algumas alterações, o que eu vou fazer junto com vocês daqui a pouco. Nós já registramos tudo, já fizemos tudo, vamos lá, vou subir o go run main.go, vou no navegador, atualizo a página. Ele mostra a mensagem, mas não colocou o CSS. Por quê?
+
+[04:40] Porque eu esqueci de fazer o vínculo do CSS para ele. Então <link, link do CSS, quem vai achar essa página será o href="../assets/404.css". Agora sim.
+
+[04:52] Reparem que o texto já havia mudado, quando eu atualizar agora, temos um 404 muito legal. Então, lembrando, você pode estilizar essa página 404 do jeito que você achar melhor. “Puxa, Gui, eu quero alterar a cor”. Vamos colocar uma cor, sei lá, um vermelho, vou colocar uma cor um pouco mais forte, que é esse vermelho.
+
+[05:13] Vamos lá, atualizamos, e ele mostra o 404 na tela. Fiquem à vontade para alterar, para editar, e assim encerramos a nossa jornada no incrível mundo do Go e do Gin.
+
+[05:28] Nós fizemos muita coisa legal e vamos fazer uma revisão dos passos mais incríveis que fizemos neste curso, no próximo vídeo.
+
+@@08
+HTML, API Rest e o Gin
+
+Durante nosso treinamento, vimos que é possível entregar ou renderizar uma página HTML com Gin, como ilustra o código abaixo.
+func ExibePaginaIndex(c *gin.Context) {
+        var alunos []models.Aluno
+        database.DB.Find(&alunos)
+        c.HTML(http.StatusOK, "index.html", gin.H{
+                "alunos": alunos,
+        })
+}COPIAR CÓDIGO
+Dito isso, sobre renderizar páginas HTML com Gin, podemos afirmar que:
+
+Não precisamos registrar um endpoint para renderizar uma página HTML, pois o Gin já sabe quando renderizar cada página automaticamente.
+ 
+Alternativa correta
+Não é possível exibir as informações da API nas renderizações.
+ 
+Alternativa correta
+Registrar na instância do Gin, o carregamento de páginas com LoadHTMLGlob, e criar um endpoint são funções que renderizam uma página HTML, como ilustra o código acima.
+ 
+Alternativa correta! Podemos desenvolver uma API Rest e renderizar páginas HTML com Gin e isso é incrível.
+
+@@09
+Faça como eu fiz
+
+Chegou a hora de você seguir todos os passos realizados por mim durante esta aula. Caso já tenha feito isso, excelente.
+Caso não encontre uma solução nas perguntas feitas por alunos e alunas deste curso, para comunicar erros e tirar dúvidas de forma eficaz, clique neste link e saiba como utilizar o fórum da Alura.
+
+https://cursos.alura.com.br/comunicando-erros-e-tirando-duvidas-em-foruns-c19
+
+@@10
+O que aprendemos?
+
+Nesta aula:
+Aprendemos como renderizar páginas HTML com Gin;
+Registramos no Gin um caminho para os arquivos estáticos, para deixar nossa aplicação bem bonita.
+Projeto final do curso
+Aqui você pode baixar o zip da aula 05 ou acessar os arquivos no Github!
+
+https://github.com/alura-cursos/api_rest_gin_go_2-validacoes-e-testes/archive/refs/heads/aula_5.zip
+
+https://github.com/alura-cursos/api_rest_gin_go_2-validacoes-e-testes/tree/aula_5
+
+@@11
+Parabéns!
+
+Chegou o momento de celebrar sua grande conquista!
+
+
+Neste treinamento, todas as barreiras foram vencidas e você aprofundou ainda mais seus conhecimentos com a linguagem Go e o framework Gin.
+
+Você criou e aplicou diferentes validações em sua struct garantindo valores válidos em sua API. Além disso, você escreveu e testou os principais endpoints da aplicação e isso foi incrível. Para fechar com chave de ouro, usou o Gin para renderizar páginas HTML e até alterou a página 404 padrão.
+
+Nossa… Quanta coisa legal!
+
+Mostre a aplicação que desenvolveu para outras pessoas e marque a Alura nas redes sociais com a #alurago, porque vamos olhar seu projeto e curtir o que fez. Para me seguir no Instagram ou Linkedin.
+
+Agora, dê uma nota para o curso, pegue seu certificado e comemore bastante essa conquista.
+"Está tudo bem perder para um adversário. O que não está bem é perder para o medo.” (Senhor Miyagi)
+
+Parabéns!!!
+
+Guilherme Lima
+
+https://linktr.ee/guilimadev
+
+https://linktr.ee/guilimadev
+
+@@12
+Conclusão
+
+[00:00] Se você chegou até aqui, parabéns, você está finalizando mais um treinamento da Alura. Foi uma honra ter você aqui durante todo esse curso e eu gostaria de relembrar alguns pontos que realizamos neste treinamento.
+[00:12] Nós realizamos diversos e diversos testes incríveis, conectando com o banco de dados, criando recursos para mock, de testes, isso foi muito legal. Além disso, renderizamos também a nossa aplicação. Colocamos validações nas requisições, renderizamos a nossa aplicação e alteramos até a nossa página "404". Olha que incrível, isso ficou muito legal.
+
+[00:35] Eu espero que você tenha gostado, se divertido e que todo o conhecimento que você adquiriu neste treinamento você aplique no seu trabalho, nos seus estudos, no seu dia a dia como desenvolvedor também. Um forte abraço, não esqueça de dar a nota desse curso e nos encontramos no próximo treinamento. Tchau.
